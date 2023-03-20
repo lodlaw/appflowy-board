@@ -184,8 +184,11 @@ class _AppFlowyBoardGroupState extends State<AppFlowyBoardGroup> {
           margin: widget.margin,
           clipBehavior: Clip.hardEdge,
           decoration: BoxDecoration(
-            color: widget.backgroundColor,
-            borderRadius: BorderRadius.circular(widget.cornerRadius),
+            color: Colors.white,
+            border: Border.all(
+              color: const Color(0xFF95928F),
+            ),
+            borderRadius: BorderRadius.circular(6.0),
           ),
           child: Flex(
             direction: Axis.vertical,
