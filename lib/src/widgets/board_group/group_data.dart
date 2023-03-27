@@ -192,12 +192,14 @@ class AppFlowyGroupData<CustomData> extends ReoderFlexItem with EquatableMixin {
   AppFlowyGroupHeaderData headerData;
   final List<AppFlowyGroupItem> _items;
   final CustomData? customData;
+  final Function(Object?, String)? onDraggedTo;
 
   AppFlowyGroupData({
     this.customData,
     required this.id,
     required String name,
     List<AppFlowyGroupItem> items = const [],
+    this.onDraggedTo,
   })  : _items = items,
         headerData = AppFlowyGroupHeaderData(
           groupId: id,

@@ -55,10 +55,12 @@ abstract class ReorderDragTargeKeys {
 
 abstract class ReorderFlexAction {
   void Function(void Function(BuildContext)?)? _scrollToBottom;
+
   void Function(void Function(BuildContext)?) get scrollToBottom =>
       _scrollToBottom!;
 
   void Function(int)? _resetDragTargetIndex;
+
   void Function(int) get resetDragTargetIndex => _resetDragTargetIndex!;
 }
 
@@ -116,6 +118,8 @@ class ReorderFlex extends StatefulWidget {
 
   final ReorderFlexAction? reorderFlexAction;
 
+  final Function(DragTargetData, String id) onAcceptCustomDragTarget;
+
   ReorderFlex({
     Key? key,
     this.scrollController,
@@ -129,6 +133,7 @@ class ReorderFlex extends StatefulWidget {
     this.onDragEnded,
     this.interceptor,
     this.reorderFlexAction,
+    required this.onAcceptCustomDragTarget,
   })  : assert(children.every((Widget w) => w.key != null),
             'All child must have a key.'),
         super(key: key);
@@ -408,7 +413,7 @@ class ReorderFlexState extends State<ReorderFlex>
     IsDraggable draggable,
   ) {
     final reorderFlexItem = widget.dataSource.items[dragTargetIndex];
-    return ReorderDragTarget<FlexDragTargetData>(
+    return ReorderDragTarget(
       indexGlobalKey: indexKey,
       draggable: draggable,
       dragTargetData: FlexDragTargetData(
@@ -427,7 +432,9 @@ class ReorderFlexState extends State<ReorderFlex>
         widget.dragStateStorage?.removeState(widget.reorderFlexId);
       },
       onDragMoved: (dragTargetData, offset) {
-        dragTargetData.dragTargetOffset = offset;
+        if (dragTargetData is FlexDragTargetData) {
+          dragTargetData.dragTargetOffset = offset;
+        }
       },
       onDragEnded: (dragTargetData) {
         if (!mounted) {
@@ -442,42 +449,53 @@ class ReorderFlexState extends State<ReorderFlex>
         _animation.insertController.stop();
 
         setState(() {
-          if (dragTargetData.reorderFlexId == widget.reorderFlexId) {
-            _onReordered(
-              draggingState.dragStartIndex,
-              draggingState.currentIndex,
-            );
+          if (dragTargetData is FlexDragTargetData) {
+            if (dragTargetData.reorderFlexId == widget.reorderFlexId) {
+              _onReordered(
+                draggingState.dragStartIndex,
+                draggingState.currentIndex,
+              );
+            }
+            draggingState.endDragging();
+            widget.onDragEnded?.call();
           }
-          draggingState.endDragging();
-          widget.onDragEnded?.call();
         });
       },
-      onWillAccept: (FlexDragTargetData dragTargetData) {
+      onWillAccept: (DragTargetData dragTargetData) {
         // Do not receive any events if the Insert item is animating.
         if (_animation.insertController.isAnimating) {
           return false;
         }
 
-        if (dragTargetData.isDragging) {
-          assert(widget.dataSource.items.length > dragTargetIndex);
-          if (_interceptDragTarget(dragTargetData, (interceptor) {
-            interceptor.onWillAccept(
-              context: builderContext,
-              reorderFlexState: this,
-              dragTargetData: dragTargetData,
-              dragTargetId: reorderFlexItem.id,
-              dragTargetIndex: dragTargetIndex,
-            );
-          })) {
-            return true;
+        if (dragTargetData is FlexDragTargetData) {
+          if (dragTargetData.isDragging) {
+            assert(widget.dataSource.items.length > dragTargetIndex);
+            if (_interceptDragTarget(dragTargetData, (interceptor) {
+              interceptor.onWillAccept(
+                context: builderContext,
+                reorderFlexState: this,
+                dragTargetData: dragTargetData,
+                dragTargetId: reorderFlexItem.id,
+                dragTargetIndex: dragTargetIndex,
+              );
+            })) {
+              return true;
+            } else {
+              return handleOnWillAccept(builderContext, dragTargetIndex);
+            }
           } else {
-            return handleOnWillAccept(builderContext, dragTargetIndex);
+            return false;
           }
-        } else {
-          return false;
         }
+
+        return true;
       },
       onAccept: (dragTargetData) {
+        if (!(dragTargetData is FlexDragTargetData) &&
+            dragTargetData is DragTargetData) {
+          widget.onAcceptCustomDragTarget(dragTargetData, reorderFlexItem.id);
+        }
+
         _interceptDragTarget(
           dragTargetData,
           (interceptor) => interceptor.onAccept(dragTargetData),
@@ -501,16 +519,20 @@ class ReorderFlexState extends State<ReorderFlex>
   }
 
   bool _interceptDragTarget(
-    FlexDragTargetData dragTargetData,
+    DragTargetData dragTargetData,
     void Function(DragTargetInterceptor) callback,
   ) {
-    final interceptor = widget.interceptor;
-    if (interceptor != null && interceptor.canHandler(dragTargetData)) {
-      callback(interceptor);
-      return true;
-    } else {
-      return false;
+    if (dragTargetData is FlexDragTargetData) {
+      final interceptor = widget.interceptor;
+      if (interceptor != null && interceptor.canHandler(dragTargetData)) {
+        callback(interceptor);
+        return true;
+      } else {
+        return false;
+      }
     }
+
+    return false;
   }
 
   Widget _makeAppearSpace(Widget child, Size? feedbackSize) {

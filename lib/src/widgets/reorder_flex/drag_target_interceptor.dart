@@ -25,10 +25,10 @@ abstract class DragTargetInterceptor {
   });
 
   /// Handle the [DragTarget]'s [onAccept] event.
-  void onAccept(FlexDragTargetData dragTargetData) {}
+  void onAccept(DragTargetData dragTargetData) {}
 
   /// Handle the [DragTarget]'s [onLeave] event.
-  void onLeave(FlexDragTargetData dragTargetData) {}
+  void onLeave(DragTargetData dragTargetData) {}
 
   ReorderFlexDraggableTargetBuilder? get draggableTargetBuilder => null;
 }
@@ -163,13 +163,13 @@ class CrossReorderFlexDragTargetInterceptor extends DragTargetInterceptor {
   }
 
   @override
-  void onAccept(FlexDragTargetData dragTargetData) {
+  void onAccept(DragTargetData dragTargetData) {
     Log.trace(
         '[$CrossReorderFlexDragTargetInterceptor] Group:[$reorderFlexId] on onAccept');
   }
 
   @override
-  void onLeave(FlexDragTargetData dragTargetData) {
+  void onLeave(DragTargetData dragTargetData) {
     Log.trace(
         '[$CrossReorderFlexDragTargetInterceptor] Group:[$reorderFlexId] on leave');
   }

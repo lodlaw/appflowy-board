@@ -1,6 +1,8 @@
 import 'dart:collection';
 
+import 'package:appflowy_board/appflowy_board.dart';
 import 'package:appflowy_board/src/widgets/reorder_flex/drag_state.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import '../../rendering/board_overlay.dart';
 import '../../utils/log.dart';
@@ -96,6 +98,8 @@ class AppFlowyBoardGroup extends StatefulWidget {
 
   final ReorderFlexAction? reorderFlexAction;
 
+  final Function(DragTargetData, String) onAcceptCustomDragTarget;
+
   const AppFlowyBoardGroup({
     Key? key,
     this.headerBuilder,
@@ -104,6 +108,7 @@ class AppFlowyBoardGroup extends StatefulWidget {
     required this.onReorder,
     required this.dataSource,
     required this.phantomController,
+    required this.onAcceptCustomDragTarget,
     this.reorderFlexAction,
     this.dragStateStorage,
     this.dragTargetKeys,
@@ -164,6 +169,9 @@ class _AppFlowyBoardGroupState extends State<AppFlowyBoardGroup> {
               widget.phantomController.updateIndex(fromIndex, toIndex);
             }
           }),
+          onAcceptCustomDragTarget: (dragData, String groupId) {
+            widget.onAcceptCustomDragTarget(dragData, groupId);
+          },
           onDragEnded: () {
             widget.phantomController.groupEndDragging(widget.groupId);
             widget.onDragEnded?.call(widget.groupId);

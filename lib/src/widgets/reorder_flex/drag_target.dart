@@ -125,7 +125,12 @@ class _ReorderDragTargetState<T extends DragTargetData>
 
         return widget.onWillAccept(dragTargetData);
       },
-      onAccept: widget.onAccept,
+      onAccept: (val) {
+        if (widget.onAccept != null) {
+          widget.onAccept!(val);
+        }
+      },
+
       onMove: (detail) {
         widget.onDragMoved(detail.data, detail.offset);
       },
@@ -316,6 +321,7 @@ class AbsorbPointerWidget extends StatelessWidget {
   final Widget? child;
   final bool useIntrinsicSize;
   final double opacity;
+
   const AbsorbPointerWidget({
     required this.child,
     required this.opacity,
@@ -341,6 +347,7 @@ class AbsorbPointerWidget extends StatelessWidget {
 class PhantomWidget extends StatelessWidget {
   final Widget? child;
   final double opacity;
+
   const PhantomWidget({
     this.child,
     this.opacity = 1.0,
@@ -434,12 +441,15 @@ class _DragTargeMovePlaceholderState extends State<DragTargeMovePlaceholder> {
 
 abstract class FakeDragTargetEventTrigger {
   void fakeOnDragStart(void Function(int?) callback);
+
   void fakeOnDragEnded(VoidCallback callback);
 }
 
 abstract class FakeDragTargetEventData {
   Size? get feedbackSize;
+
   int get index;
+
   DragTargetData get dragTargetData;
 }
 
@@ -452,6 +462,7 @@ class FakeDragTarget<T extends DragTargetData> extends StatefulWidget {
   final Widget child;
   final AnimationController insertAnimationController;
   final AnimationController deleteAnimationController;
+
   const FakeDragTarget({
     Key? key,
     required this.eventTrigger,

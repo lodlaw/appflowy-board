@@ -9,24 +9,24 @@ import 'package:flutter/material.dart';
 import 'reorder_phantom/phantom_controller.dart';
 
 typedef OnMoveGroup = void Function(
-  String fromGroupId,
-  int fromIndex,
-  String toGroupId,
-  int toIndex,
-);
+    String fromGroupId,
+    int fromIndex,
+    String toGroupId,
+    int toIndex,
+    );
 
 typedef OnMoveGroupItem = void Function(
-  String groupId,
-  int fromIndex,
-  int toIndex,
-);
+    String groupId,
+    int fromIndex,
+    int toIndex,
+    );
 
 typedef OnMoveGroupItemToGroup = void Function(
-  String fromGroupId,
-  int fromIndex,
-  String toGroupId,
-  int toIndex,
-);
+    String fromGroupId,
+    int fromIndex,
+    String toGroupId,
+    int toIndex,
+    );
 
 /// A controller for [AppFlowyBoard] widget.
 ///
@@ -68,12 +68,16 @@ class AppFlowyBoardController extends ChangeNotifier
       _groupDatas.map((groupData) => groupData.id).toList();
 
   final LinkedHashMap<String, AppFlowyGroupController> _groupControllers =
-      LinkedHashMap();
+  LinkedHashMap();
+
+  final Function(Object?, String)? onDraggedTo;
+
 
   AppFlowyBoardController({
     this.onMoveGroup,
     this.onMoveGroupItem,
     this.onMoveGroupItemToGroup,
+    this.onDraggedTo,
   });
 
   /// Adds a new group to the end of the current group list.
@@ -218,12 +222,10 @@ class AppFlowyBoardController extends ChangeNotifier
   /// group with id [toGroupId] at [toGroupIndex]
   @override
   @protected
-  void moveGroupItemToAnotherGroup(
-    String fromGroupId,
-    int fromGroupIndex,
-    String toGroupId,
-    int toGroupIndex,
-  ) {
+  void moveGroupItemToAnotherGroup(String fromGroupId,
+      int fromGroupIndex,
+      String toGroupId,
+      int toGroupIndex,) {
     final fromGroupController = getGroupController(fromGroupId)!;
     final toGroupController = getGroupController(toGroupId)!;
     final fromGroupItem = fromGroupController.removeAt(fromGroupIndex);
@@ -273,7 +275,8 @@ class AppFlowyBoardController extends ChangeNotifier
       groupController.removeAt(index);
 
       Log.debug(
-          '[$AppFlowyBoardController] Group:[$groupId] remove phantom, current count: ${groupController.items.length}');
+          '[$AppFlowyBoardController] Group:[$groupId] remove phantom, current count: ${groupController
+              .items.length}');
     }
     return isExist;
   }

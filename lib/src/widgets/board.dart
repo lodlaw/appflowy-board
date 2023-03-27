@@ -1,6 +1,7 @@
 import 'package:appflowy_board/src/utils/log.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../appflowy_board.dart';
 import 'board_data.dart';
 import 'board_group/group.dart';
 import 'board_group/group_data.dart';
@@ -175,10 +176,11 @@ class _AppFlowyBoardContent extends StatefulWidget {
     this.headerBuilder,
     required this.phantomController,
     Key? key,
-  })  : reorderFlexConfig = const ReorderFlexConfig(
-          direction: Axis.horizontal,
-          dragDirection: Axis.horizontal,
-        ),
+  })
+      : reorderFlexConfig = const ReorderFlexConfig(
+    direction: Axis.horizontal,
+    dragDirection: Axis.horizontal,
+  ),
         super(key: key);
 
   @override
@@ -187,7 +189,7 @@ class _AppFlowyBoardContent extends StatefulWidget {
 
 class _AppFlowyBoardContentState extends State<_AppFlowyBoardContent> {
   final GlobalKey _boardContentKey =
-      GlobalKey(debugLabel: '$_AppFlowyBoardContent overlay key');
+  GlobalKey(debugLabel: '$_AppFlowyBoardContent overlay key');
   late BoardOverlayEntry _overlayEntry;
 
   @override
@@ -207,6 +209,11 @@ class _AppFlowyBoardContentState extends State<_AppFlowyBoardContent> {
           onReorder: widget.onReorder,
           dataSource: widget.dataController,
           interceptor: interceptor,
+          onAcceptCustomDragTarget: (DragTargetData data, String id) {
+            if (widget.dataController.onDraggedTo != null) {
+              widget.dataController.onDraggedTo!(data, id);
+            }
+          },
           children: _buildColumns(),
         );
 
@@ -218,7 +225,7 @@ class _AppFlowyBoardContentState extends State<_AppFlowyBoardContent> {
                 clipBehavior: Clip.hardEdge,
                 decoration: BoxDecoration(
                   borderRadius:
-                      BorderRadius.circular(widget.config.cornerRadius),
+                  BorderRadius.circular(widget.config.cornerRadius),
                 ),
                 child: widget.background,
               ),
@@ -241,8 +248,11 @@ class _AppFlowyBoardContentState extends State<_AppFlowyBoardContent> {
 
   List<Widget> _buildColumns() {
     final List<Widget> children =
-        widget.dataController.groupDatas.asMap().entries.map(
-      (item) {
+    widget.dataController.groupDatas
+        .asMap()
+        .entries
+        .map(
+          (item) {
         final columnData = item.value;
         final columnIndex = item.key;
 
@@ -277,6 +287,11 @@ class _AppFlowyBoardContentState extends State<_AppFlowyBoardContent> {
                 dragTargetKeys: widget.boardState,
                 reorderFlexAction: reorderFlexAction,
                 stretchGroupHeight: widget.config.stretchGroupHeight,
+                onAcceptCustomDragTarget: (data, groupId) {
+                  if (columnData.onDraggedTo != null) {
+                    columnData.onDraggedTo!(data, groupId);
+                  }
+                },
               );
 
               return ConstrainedBox(
@@ -287,15 +302,14 @@ class _AppFlowyBoardContentState extends State<_AppFlowyBoardContent> {
           ),
         );
       },
-    ).toList();
+    )
+        .toList();
 
     return children;
   }
 
-  Widget? _buildHeader(
-    BuildContext context,
-    AppFlowyGroupData groupData,
-  ) {
+  Widget? _buildHeader(BuildContext context,
+      AppFlowyGroupData groupData,) {
     if (widget.headerBuilder == null) {
       return null;
     }
@@ -374,11 +388,9 @@ class AppFlowyBoardState extends DraggingStateStorage
   }
 
   @override
-  void insertDragTarget(
-    String reorderFlexId,
-    String key,
-    GlobalObjectKey<State<StatefulWidget>> value,
-  ) {
+  void insertDragTarget(String reorderFlexId,
+      String key,
+      GlobalObjectKey<State<StatefulWidget>> value,) {
     Map<String, GlobalObjectKey>? group = groupDragTargetKeys[reorderFlexId];
     if (group == null) {
       group = {};
@@ -388,10 +400,8 @@ class AppFlowyBoardState extends DraggingStateStorage
   }
 
   @override
-  GlobalObjectKey<State<StatefulWidget>>? getDragTarget(
-    String reorderFlexId,
-    String key,
-  ) {
+  GlobalObjectKey<State<StatefulWidget>>? getDragTarget(String reorderFlexId,
+      String key,) {
     Map<String, GlobalObjectKey>? group = groupDragTargetKeys[reorderFlexId];
     if (group != null) {
       return group[key];
